@@ -1,0 +1,38 @@
+ECHO=/bin/echo
+IDL=/usr/local/bin/idl
+TEXDIR=../out/tex/
+PLOTDIR=../out/plot/
+SAVEDIR=../out/dc/
+SPLITNMERGE=0
+GALEX=0
+UKIDSS=0
+RELAXEDFIT=0
+RESAMPLE=1
+EXCLUDES82=0
+
+$(PLOTDIR)dc_full_fluxdist_%_g_u.ps: deconvolve_all.pro plot_deconvolved_all.pro #Should be like $(PLOTDIR)dc_full_fluxdist_17.8_i_18.0_15_g_u.ps
+	$(ECHO) "deconvolve_all, magbin='$(subst _g_u.ps,,$(subst dc_full_fluxdist_,,$(@F)))',savefilename='$(SAVEDIR)dc_full_fluxdist_$(subst _g_u.ps,,$(subst dc_full_fluxdist_,,$(@F))).sav',/rescale,/initprevbin,splitnmerge=$(SPLITNMERGE),uv=$(GALEX),nir=$(UKIDSS),/full,relaxedfit=$(RELAXEDFIT),excludes82=$(EXCLUDES82)" | $(IDL)
+	$(ECHO) "plot_deconvolved_all, savefilename='$(SAVEDIR)dc_full_fluxdist_$(subst _g_u.ps,,$(subst dc_full_fluxdist_,,$(@F))).sav', basefilename='$(@D)/dc_full_fluxdist_$(subst _g_u.ps,,$(subst dc_full_fluxdist_,,$(@F)))_',/fluxes,/plotfluxes,/hoggscatter,/rescaled,galex=$(GALEX),/full" | $(IDL)
+ifeq ($(RESAMPLE),1)
+	$(ECHO) "plot_deconvolved_all, savefilename='$(SAVEDIR)dc_full_fluxdist_$(subst _g_u.ps,,$(subst dc_full_fluxdist_,,$(@F))).sav', basefilename='$(@D)/dc_full_fluxdist_resample_$(subst _g_u.ps,,$(subst dc_full_fluxdist_,,$(@F)))_',/fluxes,/plotfluxes,/resampledata,magbin='$(subst _g_u.ps,,$(subst dc_full_fluxdist_,,$(@F)))',/hoggscatter,/rescaled,galex=$(GALEX),/full" | $(IDL)
+endif
+
+$(PLOTDIR)dc_full_fluxdist_%_gr_ug.ps: deconvolve_all.pro plot_deconvolved_all.pro
+	$(ECHO) "deconvolve_all, magbin='$(subst _gr_ug.ps,,$(subst dc_full_fluxdist_,,$(@F)))',savefilename='$(SAVEDIR)dc_full_fluxdist_$(subst _gr_ug.ps,,$(subst dc_full_fluxdist_,,$(@F))).sav',/rescale,/initprevbin,splitnmerge=$(SPLITNMERGE),uv=$(GALEX),nir=$(UKIDSS),/full, relaxedfit=$(RELAXEDFIT),excludes82=$(EXCLUDES82)" | $(IDL)
+	$(ECHO) "plot_deconvolved_all, savefilename='$(SAVEDIR)dc_full_fluxdist_$(subst _gr_ug.ps,,$(subst dc_full_fluxdist_,,$(@F))).sav', basefilename='$(@D)/dc_full_fluxdist_$(subst _gr_ug.ps,,$(subst dc_full_fluxdist_,,$(@F)))_',/fluxes,/hoggscatter,/rescaled,galex=$(GALEX),/full" | $(IDL)
+ifeq ($(RESAMPLE),1)
+	$(ECHO) "plot_deconvolved_all, savefilename='$(SAVEDIR)dc_full_fluxdist_$(subst _gr_ug.ps,,$(subst dc_full_fluxdist_,,$(@F))).sav', basefilename='$(@D)/dc_full_fluxdist_resample_$(subst _gr_ug.ps,,$(subst dc_full_fluxdist_,,$(@F)))_',/fluxes,/resampledata,magbin='$(subst _gr_ug.ps,,$(subst dc_full_fluxdist_,,$(@F)))',/hoggscatter,/rescaled,galex=$(GALEX),/full" | $(IDL)
+endif
+
+$(PLOTDIR)full_data_%_g_u.ps: plot_all_data_magbin.pro #should be like /full_data_21.0_i_21.2_g_u.ps
+	$(ECHO) "plot_all_data_magbin, '$(subst _g_u.ps,,$(subst $(@D)/full_data_,,$@))', basefilename='$(PLOTDIR)full_data_',/plotfluxes,/hoggscatter,galex=$(GALEX),/full" | $(IDL)
+	$(ECHO) "plot_all_data_magbin, '$(subst _g_u.ps,,$(subst $(@D)/full_data_,,$@))', basefilename='$(PLOTDIR)full_data_',/hoggscatter,galex=$(GALEX),/full" | $(IDL)
+
+%.eps: %.ps
+	cp $< $(@)_tmp
+	echo "1,\$$s/%%BoundingBox: 36 126 576 666/%%BoundingBox: 36 146 513 611/g" > $(@)_edcmd
+	echo "w" >> $(@)_edcmd
+	ed $< < $(@)_edcmd
+	cp $< $@
+	cp $(@)_tmp $< 
+	rm $(@)_edcmd $(@)_tmp
